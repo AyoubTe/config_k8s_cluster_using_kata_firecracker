@@ -43,7 +43,7 @@ mkdir -p /etc/kata-containers
 # Download proper initrd with kata-agent
 echo "Downloading kata-containers initrd with agent..."
 cd /opt/kata/share/kata-containers/
-wget -q -O kata-containers-initrd-2.5.2.img \
+curl -L -o kata-containers-initrd-2.5.2.img \
     https://github.com/kata-containers/kata-containers/releases/download/2.5.2/kata-containers-initrd-2.5.2.img || {
     echo "ERROR: Failed to download initrd. Check internet connection."
     exit 1
