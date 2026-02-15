@@ -71,4 +71,15 @@ sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.to
 systemctl enable --now containerd
 systemctl enable kubelet
 
+# Autoriser le verrouillage de la mémoire RAM
+mkdir -p /etc/systemd/system/containerd.service.d/
+cat <<EOF > /etc/systemd/system/containerd.service.d/override.conf
+[Service]
+LimitMEMLOCK=infinity
+LimitNOFILE=1048576
+EOF
+
+systemctl daemon-reload
+systemctl restart containerd
+
 echo "Common setup done on $(hostname)"
