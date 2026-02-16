@@ -4,8 +4,8 @@ set -e
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 # "====== Generating TLS cert for webhook ======"
-mkdir -p /tmp/webhook-certs
-cat > /tmp/webhook-certs/csr.conf <<CSREOF
+mkdir -p /webhook-certs
+cat > /webhook-certs/csr.conf <<CSREOF
 [req]
 req_extensions = v3_req
 distinguished_name = req_distinguished_name
@@ -20,28 +20,28 @@ DNS.1 = kata-webhook.openwhisk.svc
 DNS.2 = kata-webhook.openwhisk.svc.cluster.local
 CSREOF
 
-openssl genrsa -out /tmp/webhook-certs/ca.key 2048 2>/dev/null
-openssl req -x509 -new -nodes -key /tmp/webhook-certs/ca.key \
+openssl genrsa -out /webhook-certs/ca.key 2048 2>/dev/null
+openssl req -x509 -new -nodes -key /webhook-certs/ca.key \
     -subj "/CN=kata-webhook-ca" -days 3650 \
-    -out /tmp/webhook-certs/ca.crt 2>/dev/null
+    -out /webhook-certs/ca.crt 2>/dev/null
 
-openssl genrsa -out /tmp/webhook-certs/tls.key 2048 2>/dev/null
-openssl req -new -key /tmp/webhook-certs/tls.key \
+openssl genrsa -out /webhook-certs/tls.key 2048 2>/dev/null
+openssl req -new -key /webhook-certs/tls.key \
     -subj "/CN=kata-webhook.openwhisk.svc" \
-    -out /tmp/webhook-certs/tls.csr 2>/dev/null
-openssl x509 -req -in /tmp/webhook-certs/tls.csr \
-    -CA /tmp/webhook-certs/ca.crt -CAkey /tmp/webhook-certs/ca.key \
-    -CAcreateserial -out /tmp/webhook-certs/tls.crt \
+    -out /webhook-certs/tls.csr 2>/dev/null
+openssl x509 -req -in /webhook-certs/tls.csr \
+    -CA /webhook-certs/ca.crt -CAkey /webhook-certs/ca.key \
+    -CAcreateserial -out /webhook-certs/tls.crt \
     -days 3650 -extensions v3_req \
-    -extfile /tmp/webhook-certs/csr.conf 2>/dev/null
+    -extfile /webhook-certs/csr.conf 2>/dev/null
 
-CA_BUNDLE=$(base64 -w0 /tmp/webhook-certs/ca.crt)
+CA_BUNDLE=$(base64 -w0 /webhook-certs/ca.crt)
 
 # "====== Creating webhook TLS secret ======"
 kubectl delete secret kata-webhook-tls -n openwhisk 2>/dev/null || true
 kubectl create secret tls kata-webhook-tls \
-    --cert=/tmp/webhook-certs/tls.crt \
-    --key=/tmp/webhook-certs/tls.key \
+    --cert=/webhook-certs/tls.crt \
+    --key=/webhook-certs/tls.key \
     -n openwhisk
 
 # "====== Deploying webhook server ======"

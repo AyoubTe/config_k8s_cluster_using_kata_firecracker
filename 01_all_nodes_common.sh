@@ -13,6 +13,19 @@ EOF
 modprobe overlay
 modprobe br_netfilter
 
+# Load the accelerated networking and communication modules
+sudo modprobe vhost_net
+sudo modprobe vhost_vsock
+
+# Make them permanent so they survive a reboot
+cat <<EOF | sudo tee -a /etc/modules-load.d/k8s.conf
+vhost_net
+vhost_vsock
+EOF
+
+# 3. Verify they are active
+ls -l /dev/vhost-net /dev/vhost-vsock
+
 cat > /etc/sysctl.d/k8s.conf <<EOF
 net.bridge.bridge-nf-call-iptables  = 1
 net.bridge.bridge-nf-call-ip6tables = 1
